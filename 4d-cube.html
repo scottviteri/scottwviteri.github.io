@@ -84,7 +84,7 @@
   </style>
 </head>
 <body>
-  <!-- Site header -->
+  <!-- Site header to tie it into the mysterious site -->
   <div style="background:#111;color:#ccc;padding:6px 14px;font-family:system-ui,-apple-system,sans-serif;font-size:12px;border-bottom:1px solid #222;display:flex;gap:10px;align-items:center;">
     <a href="index.html" style="color:#00ff88;text-decoration:none;font-weight:500;">← back</a>
     <span style="opacity:0.5;">•</span>
@@ -93,7 +93,8 @@
   </div>
 
   <h1>4D cube — rotation playground &amp; match-the-target game
-    <button onclick="showHelp()" style="font-size:10px; margin-left:8px; padding:1px 6px; vertical-align:middle;">feedback</button>
+    <button onclick="showHelp()" style="font-size:10px; margin-left:12px; padding:1px 6px; vertical-align:middle;">help &amp; math</button>
+    <button onclick="showHelp()" style="font-size:10px; margin-left:4px; padding:1px 6px; vertical-align:middle;">feedback</button>
   </h1>
 
   <div id="root">
@@ -1192,18 +1193,6 @@ setTimeout(() => {
     if (k) k.value = savedKey;
   }
 }, 500);
-
-// Close on escape or outside click
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'h' || e.key === 'H' || e.key === '?') {
-    const m = document.getElementById('help-modal');
-    if (m) m.style.display = (m.style.display === 'block') ? 'none' : 'block';
-  }
-  if (e.key === 'Escape') {
-    const m = document.getElementById('help-modal');
-    if (m && m.style.display === 'block') m.style.display = 'none';
-  }
-});
 
 // Close on escape or outside click
 document.addEventListener('keydown', (e) => {

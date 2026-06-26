@@ -93,12 +93,11 @@
 
         /* Hero Section */
         .hero {
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 0 50px;
+            padding: 30px 50px 0;
         }
 
         .hero-content {
@@ -122,19 +121,7 @@
             50% { background-position: 100% 50%; }
         }
 
-        .hero-subtitle {
-            font-size: clamp(18px, 3vw, 24px);
-            color: #888;
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
 
-        .hero-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
 
         .btn {
             padding: 15px 35px;
@@ -176,22 +163,16 @@
             margin: 0 auto;
         }
 
-        .section-title {
-            font-size: clamp(32px, 5vw, 48px);
-            margin-bottom: 50px;
-            text-align: center;
-            background: linear-gradient(135deg, #ffffff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+
 
         /* Demo Cards */
         .demo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 30px;
-            margin-top: 50px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 10px 50px 80px;
         }
 
         .demo-card {
@@ -353,63 +334,42 @@
     <nav id="navbar">
         <div class="nav-container">
             <div class="logo">∴</div>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#demos">Demos</a></li>
-            </ul>
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section (minimal) -->
     <section class="hero" id="home">
         <div class="hero-content">
             <h1>∴</h1>
-            <p class="hero-subtitle">
-                Fragments suspended in the lattice.<br>
-                Patterns that observe themselves.
-            </p>
-            <div class="hero-buttons">
-                <a href="#demos" class="btn btn-primary">Enter the Constructs</a>
-            </div>
         </div>
     </section>
 
-    <!-- Interactive Demos Section -->
-    <section id="demos">
-        <h2 class="section-title">Constructs</h2>
-        <div class="demo-grid">
+    <div class="demo-grid">
             <a href="transformer-viz.html" class="demo-card">
-                <div class="demo-icon">🤖</div>
                 <h3 class="demo-title">Transformer Attention</h3>
                 <p class="demo-description">Interactive visualization of multi-head attention mechanisms in transformer architectures</p>
             </a>
             <a href="rl-playground.html" class="demo-card">
-                <div class="demo-icon">🎮</div>
                 <h3 class="demo-title">RL Playground</h3>
                 <p class="demo-description">Train agents in real-time using Q-learning, policy gradients, and more</p>
             </a>
             <a href="neural-network.html" class="demo-card">
-                <div class="demo-icon">🧠</div>
                 <h3 class="demo-title">Neural Network Builder</h3>
                 <p class="demo-description">Build and train neural networks with interactive backpropagation visualization</p>
             </a>
             <a href="optimization.html" class="demo-card">
-                <div class="demo-icon">📈</div>
                 <h3 class="demo-title">Optimization Landscapes</h3>
                 <p class="demo-description">Explore gradient descent, Adam, and other optimizers in 3D loss landscapes</p>
             </a>
             <a href="algorithmic-art.html" class="demo-card">
-                <div class="demo-icon">🎨</div>
                 <h3 class="demo-title">Algorithmic Art Lab</h3>
                 <p class="demo-description">Create stunning generative art with flow fields, fractals, and neural patterns</p>
             </a>
             <a href="4d-cube.html" class="demo-card">
-                <div class="demo-icon">🔷</div>
                 <h3 class="demo-title">4D Rotation Playground</h3>
                 <p class="demo-description">Interactive tesseract for 4D rotation intuition — K₄ + tiles, depth color, match game, keyboard support + live math</p>
             </a>
         </div>
-    </section>
 
 
 
