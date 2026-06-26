@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>4D Cube — Rotation Playground &amp; Match Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
   <style>
     body { font-family: monospace; background: #fafafa; margin: 0; padding: 20px; color: #222; }
     h1 { font-size: 14px; font-weight: normal; color: #666; margin: 0 0 14px; }
@@ -83,15 +84,16 @@
   </style>
 </head>
 <body>
-  <!-- Tie-in header for scottwviteri.com dark theme -->
+  <!-- Site header -->
   <div style="background:#111;color:#ccc;padding:6px 14px;font-family:system-ui,-apple-system,sans-serif;font-size:12px;border-bottom:1px solid #222;display:flex;gap:10px;align-items:center;">
-    <a href="index.html" style="color:#00ff88;text-decoration:none;font-weight:500;">← back to scottwviteri.com</a>
+    <a href="index.html" style="color:#00ff88;text-decoration:none;font-weight:500;">← back</a>
     <span style="opacity:0.5;">•</span>
-    <span style="color:#888;">4D Rotation Playground</span>
+    <span style="color:#888;">Rotation Lattice</span>
+    <button onclick="showHelp()" style="margin-left:auto;font-size:11px;padding:2px 8px;">help &amp; math</button>
   </div>
 
   <h1>4D cube — rotation playground &amp; match-the-target game
-    <span style="font-size:11px; color:#aaa; margin-left:12px">see README.md for the full tour</span>
+    <button onclick="showHelp()" style="font-size:10px; margin-left:8px; padding:1px 6px; vertical-align:middle;">feedback</button>
   </h1>
 
   <div id="root">
@@ -176,6 +178,7 @@
           <div class="stat"><span class="label">par</span><span class="val" id="par-val">—</span></div>
           <div class="stat"><span class="label">your degrees</span><span class="val" id="moves-val">0°</span></div>
           <div class="stat"><span class="label">efficiency</span><span class="val" id="eff-val">—</span></div>
+          <div class="stat"><span class="label">your best</span><span class="val" id="best-eff-val">—</span></div>
           <div style="display:flex; gap:6px; margin-top:8px">
             <button id="new-target-btn" class="primary">new target</button>
             <button id="restart-level-btn">restart level</button>
@@ -188,6 +191,7 @@
           </div>
           <div class="hint" style="margin-top:6px">
             Match when distance &lt; 0.10. <b>Par</b> = min degrees needed; <b>efficiency</b> = par ÷ your.
+            Your best is saved locally in this browser.
           </div>
         </div>
       </div>
@@ -305,6 +309,33 @@ const LEVELS = [
 let currentLevelIdx = 0;
 let levelWins = 0;
 let currentParRad = 0;
+
+// Personal bests (per level, using localStorage)
+let personalBests = {};
+function loadPersonalBests() {
+  try {
+    const saved = localStorage.getItem('4dCubePersonalBests');
+    if (saved) personalBests = JSON.parse(saved);
+  } catch (e) {}
+}
+function savePersonalBests() {
+  try {
+    localStorage.setItem('4dCubePersonalBests', JSON.stringify(personalBests));
+  } catch (e) {}
+}
+function updateBestDisplay() {
+  const el = document.getElementById('best-eff-val');
+  if (!el) return;
+  const best = personalBests[currentLevelIdx];
+  if (best && best.bestEff > 0) {
+    let s = best.bestEff.toFixed(0) + '%';
+    if (best.bestStars > 0) s += ' ' + '★'.repeat(best.bestStars);
+    el.textContent = s;
+  } else {
+    el.textContent = '—';
+  }
+}
+loadPersonalBests();
 
 // ============= SVG setup =============
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -476,6 +507,7 @@ function applyLevelVisibility(level) {
   document.getElementById('matrix-target-section').style.display = level.showMatrix ? '' : 'none';
   document.getElementById('level-name').textContent = level.name;
   document.getElementById('level-progress').textContent = `${levelWins}/${level.winsToAdvance}`;
+  updateBestDisplay();
 }
 
 function newTarget() {
@@ -504,9 +536,19 @@ function updateGameStats() {
     else if (eff >= 50) stars = ' ★★';
     else if (eff >= 25) stars = ' ★';
     document.getElementById('eff-val').textContent = eff.toFixed(0) + '%' + stars;
+
+    // Track personal best
+    const key = currentLevelIdx;
+    const currentBest = personalBests[key] || { bestEff: 0 };
+    if (eff > currentBest.bestEff) {
+      const numStars = eff >= 80 ? 3 : eff >= 50 ? 2 : eff >= 25 ? 1 : 0;
+      personalBests[key] = { bestEff: eff, bestStars: numStars, bestMoves: yourDeg };
+      savePersonalBests();
+    }
   } else {
     document.getElementById('eff-val').textContent = '—';
   }
+  updateBestDisplay();
   const pct = Math.max(0, Math.min(1, d / 2.83));
   const fill = document.getElementById('dist-bar-fill');
   fill.style.width = (pct * 100).toFixed(1) + '%';
@@ -530,6 +572,7 @@ function updateGameStats() {
         currentLevelIdx++;
         levelWins = 0;
         applyLevelVisibility(LEVELS[currentLevelIdx]);
+        updateBestDisplay();
       }
       newTarget();
     }, 1600);
@@ -554,6 +597,7 @@ document.getElementById('game-toggle').addEventListener('click', () => {
     movesTotalRadians = 0;
     applyLevelVisibility(LEVELS[currentLevelIdx]);
     newTarget();
+    updateBestDisplay();
   } else {
     // Restore visibility when game off
     document.getElementById('tiles-section').style.display    = '';
@@ -566,6 +610,7 @@ document.getElementById('restart-level-btn').addEventListener('click', () => {
   levelWins = 0;
   applyLevelVisibility(LEVELS[currentLevelIdx]);
   newTarget();
+  updateBestDisplay();
 });
 document.getElementById('prev-level-btn').addEventListener('click', () => {
   if (currentLevelIdx > 0) {
@@ -573,6 +618,7 @@ document.getElementById('prev-level-btn').addEventListener('click', () => {
     levelWins = 0;
     applyLevelVisibility(LEVELS[currentLevelIdx]);
     newTarget();
+    updateBestDisplay();
   }
 });
 document.getElementById('next-level-btn').addEventListener('click', () => {
@@ -581,6 +627,7 @@ document.getElementById('next-level-btn').addEventListener('click', () => {
     levelWins = 0;
     applyLevelVisibility(LEVELS[currentLevelIdx]);
     newTarget();
+    updateBestDisplay();
   }
 });
 
@@ -639,6 +686,24 @@ function handleKeydown(e) {
   const d = digitFromEvent(e);
   if (d !== null) {
     if (!heldDigits.includes(d)) heldDigits.push(d);
+
+    // Allow pressing numbers to select/build axes in the persistent selector (K4)
+    if (!selOrder.includes(d)) {
+      if (selOrder.length < 2) {
+        selOrder.push(d);
+        if (selOrder.length === 2) {
+          selOrder.sort((a,b)=>a-b);
+          edgeSigns = [+1];
+        }
+      } else if (selOrder.length === 2) {
+        // replace or extend to Clifford if possible
+        if (!selOrder.includes(d)) {
+          // start new or ignore; for simplicity reset to single then add
+          selOrder = [selOrder[1], d].sort((a,b)=>a-b);
+          edgeSigns = [+1];
+        }
+      }
+    }
     updateUI();
     return;
   }
@@ -987,6 +1052,253 @@ function tick() {
 updateUI();
 drawAll();
 tick();
+
+// ============= Help & Math (in-browser tour + LaTeX) =============
+function showHelp() {
+  const modal = document.getElementById('help-modal');
+  if (modal) {
+    modal.style.display = 'block';
+    // Trigger MathJax render
+    if (window.MathJax) {
+      window.MathJax.typesetPromise && window.MathJax.typesetPromise();
+    }
+  }
+}
+
+function closeHelp() {
+  const modal = document.getElementById('help-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+const REPO_CONTEXT = `Project: 4D Cube Rotation Playground & Match Game (self-contained HTML/JS tesseract visualizer).
+
+Key concepts from README:
+- Interactive 4D tesseract (16 vertices, edges via single bit flips).
+- 6 planes in SO(4): pairs (0,1),(0,2),...,(2,3).
+- Main generic projection + 6 coordinate-plane diagnostic "tiles".
+- Depth coloring: hsl based on distance to viewing plane.
+- K4 graph + tiles for selecting rotation planes (persistent + momentary hold 0-3).
+- Clifford pairs for isoclinic rotations.
+- 7-level match game (progressively hide tiles/matrix).
+- Efficiency = par_deg / your_deg , stars for high efficiency.
+- All logic (math, drawing, input, game) is in one <script> in index.html. No build, no external deps.
+
+Core code excerpts (important functions):
+function identity4() { return [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]; }
+function matmul44(A, B) { ... } // 4x4 multiply
+function rotMat(i, j, angle) { // creates rotation in plane i-j
+  const M = identity4();
+  const c = Math.cos(angle), s = Math.sin(angle);
+  M[i][i] = c; M[i][j] = -s; M[j][i] = s; M[j][j] = c; return M;
+}
+function frobenius(A, B) { ... } // distance for matching
+const v_init = 16 vertices with ±1 coords.
+const edges = pairs differing by one bit.
+Projections: mainProjection and coordProjection(i,j).
+State: R_user, R_target (4x4), selOrder, edgeSigns, heldDigits.
+Drawing uses SVG lines with linear gradients for depth.
+Game: LEVELS array with 7 levels, randomRotationMatrix, match when frobenius < 0.10.
+Input: clickEdge, handleKeydown for hold digits and arrows.
+
+The entire interactive experience (including this help) is inside this one HTML file.`;
+
+// Simple OpenAI-compatible call (works for Grok/xAI, OpenAI, etc.)
+async function callOpenAICompatible(question, apiKey, model = 'grok-beta') {
+  const base = 'https://api.x.ai/v1'; // change to https://api.openai.com/v1 for OpenAI
+  const resp = await fetch(`${base}/chat/completions`, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        { role: 'system', content: 'You are an expert on this exact project. Use only the provided context. Be precise and helpful. If the user asks for code changes, provide exact diff-style snippets.' },
+        { role: 'user', content: `Here is the full project context:\n\n${REPO_CONTEXT}\n\nQuestion: ${question}` }
+      ],
+      max_tokens: 800
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices?.[0]?.message?.content || 'No response';
+}
+
+// Anthropic (Claude) call
+async function callAnthropic(question, apiKey, model = 'claude-opus-4-8') {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 800,
+      system: 'You are an expert on this exact project. Use only the provided context.',
+      messages: [{
+        role: 'user',
+        content: `Here is the full project context:\n\n${REPO_CONTEXT}\n\nQuestion: ${question}`
+      }]
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.content?.[0]?.text || 'No response';
+}
+
+async function askRepoLM() {
+  const key = document.getElementById('lm-api-key').value.trim();
+  if (!key) { alert('Please enter your API key'); return; }
+  const provider = document.getElementById('lm-provider').value;
+  const model = document.getElementById('lm-model').value.trim() || (provider === 'anthropic' ? 'claude-opus-4-8' : 'grok-beta');
+  const q = document.getElementById('lm-question').value.trim();
+  if (!q) return;
+
+  const respDiv = document.getElementById('lm-response');
+  respDiv.textContent = 'Thinking...';
+
+  // Try to load full README for better context when possible
+  let extraContext = '';
+  try {
+    const r = await fetch('README.md');
+    if (r.ok) extraContext = '\n\nFull README.md:\n' + await r.text();
+  } catch (e) {}
+
+  try {
+    let answer;
+    if (provider === 'anthropic') {
+      answer = await callAnthropic(q + extraContext, key, model);
+    } else {
+      answer = await callOpenAICompatible(q + extraContext, key, model);
+    }
+    respDiv.textContent = answer;
+    localStorage.setItem('lm-api-key', key);
+  } catch (err) {
+    respDiv.textContent = 'Error: ' + err.message;
+  }
+}
+
+// Auto-fill key if previously saved
+setTimeout(() => {
+  const savedKey = localStorage.getItem('lm-api-key');
+  if (savedKey) {
+    const k = document.getElementById('lm-api-key');
+    if (k) k.value = savedKey;
+  }
+}, 500);
+
+// Close on escape or outside click
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+    const m = document.getElementById('help-modal');
+    if (m) m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+  }
+  if (e.key === 'Escape') {
+    const m = document.getElementById('help-modal');
+    if (m && m.style.display === 'block') m.style.display = 'none';
+  }
+});
+
+// Close on escape or outside click
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+    const m = document.getElementById('help-modal');
+    if (m) m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+  }
+  if (e.key === 'Escape') {
+    const m = document.getElementById('help-modal');
+    if (m && m.style.display === 'block') m.style.display = 'none';
+  }
+});
 </script>
+
+<!-- Help modal -->
+<div id="help-modal" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); width:90%; max-width:720px; background:white; border:2px solid #333; border-radius:8px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,0.4); z-index:9999; font-family:monospace; font-size:13px; color:#222; max-height:75vh; overflow:auto;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <strong style="font-size:14px;">Controls &amp; Mathematics</strong>
+    <button onclick="closeHelp()" style="font-size:12px;">Close (Esc)</button>
+  </div>
+
+  <div style="margin-bottom:12px; border-bottom:1px solid #ddd; padding-bottom:8px;">
+    <strong>Controls</strong><br>
+    • <b>Click</b> K₄ edges or tiles → select rotation plane (persistent)<br>
+    • <b>Shift-click</b> or <b>hold - + click</b> → negative sign (dashed)<br>
+    • <b>Tab / Shift+Tab</b> → cycle planes<br>
+    • <b>Hold 0–3</b> (or ` for 0) → momentary override (yellow highlight on nodes)<br>
+    • <b>If keys aren't working:</b> Check for browser extensions that intercept keyboard input (e.g. Vimium, Vimium C, or other vim/emacs mode extensions). Try disabling them for this site. Mouse and arrow keys should still work.
+    • <b>Hold -</b> while overriding → negative for that plane<br>
+    • <b>← / →</b> → rotate (direction)<br>
+    • <b>Esc</b> → clear selection<br>
+    • Command box: e.g. <code>01 right</code>, <code>0123 left</code>, <code>stop</code>, <code>reset</code><br>
+    • <b>H</b> or <b>?</b> → toggle this help
+  </div>
+
+  <div>
+    <strong>Mathematics (LaTeX)</strong>
+    <p>The 4D rotation group SO(4) is generated by 6 planes: pairs from {0,1,2,3}.</p>
+    <p>A rotation in plane \((i,j)\) by angle \(\theta\) is the block matrix</p>
+    \[
+    R_{ij}(\theta) = 
+    \begin{pmatrix}
+    \cos\theta & -\sin\theta \\
+    \sin\theta & \cos\theta
+    \end{pmatrix}
+    \]
+    acting on coordinates \(i,j\) (identity elsewhere).
+
+    <p><b>Projection &amp; Depth</b></p>
+    For a projection matrix \(P : \mathbb{R}^4 \to \mathbb{R}^2\) and point \(v\):<br>
+    • 2D position = \( Pv \)<br>
+    • <b>Depth</b> = \( \sqrt{ \|v\|^2 - \|Pv\|^2 } \) (distance to the 2D viewing plane).<br>
+    Encoded as color: \(\text{hsl}(240 \cdot (1 - \text{depth}/2), 85\%, 48\%)\).
+
+    <p>Coordinate-plane tiles are special: for tile \((i,j)\), depth is exactly preserved under rotations in \((i,j)\) or its orthogonal complement.</p>
+
+    <p><b>Clifford pairs</b> (two disjoint planes) give isoclinic rotations (left or right depending on relative signs).</p>
+  </div>
+
+  <div style="margin-top:10px; font-size:11px; color:#666;">
+    Full tour and more in the README on GitHub.
+  </div>
+
+  <hr style="margin: 12px 0;">
+
+  <div>
+    <strong>Feedback</strong><br>
+    <p style="margin: 6px 0 8px 0; line-height: 1.4;">
+      Have feature requests, suggestions, or issues?<br>
+      <a href="https://github.com/scottviteri/4d-cube-viz/issues/new" target="_blank" style="color: #0066cc; font-weight: bold;">→ Open an issue on GitHub</a>
+    </p>
+    <div style="font-size:10px; color:#888;">
+      This takes you directly to the new issue form for this repo.
+    </div>
+  </div>
+
+  <hr style="margin: 12px 0;">
+
+  <div>
+    <strong>Ask LM about the repo</strong><br>
+    <small>Provide your API key (stored only in this browser). The LM will receive the README + key code excerpts in context.<br>
+    <strong>Note:</strong> Direct browser API calls can fail due to CORS — the special header is included for Anthropic. Use https server, not file://.</small>
+    <div style="margin-top:6px;">
+      <input id="lm-api-key" type="password" placeholder="API key (e.g. Anthropic or OpenAI)" style="width:100%; font-family:monospace; margin-bottom:4px;">
+      <select id="lm-provider" style="font-family:monospace; width:100%; margin-bottom:4px;">
+        <option value="anthropic" selected>Anthropic (Claude)</option>
+        <option value="openai">OpenAI-compatible (Grok, OpenAI, etc.)</option>
+      </select>
+      <input id="lm-model" type="text" value="claude-opus-4-8" placeholder="model name" style="width:100%; font-family:monospace; margin-bottom:4px;">
+      <textarea id="lm-question" placeholder="e.g. How does the rotation matrix work? Suggest a way to add 5D support." rows="2" style="width:100%; font-family:monospace; box-sizing:border-box;"></textarea>
+      <button onclick="askRepoLM()" style="margin-top:4px; font-family:monospace;">Ask</button>
+      <div id="lm-response" style="margin-top:6px; white-space:pre-wrap; background:#f8f8f8; padding:6px; border:1px solid #ddd; max-height:200px; overflow:auto; font-size:12px;"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

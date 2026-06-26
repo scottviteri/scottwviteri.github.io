@@ -1,10 +1,10 @@
-# Scott Viteri - Personal Website & ML Visualization Platform
+# ∴
 
 🚀 **Live at:** [scottwviteri.github.io](https://scottwviteri.github.io)
 
 ## Overview
 
-An interactive portfolio website featuring cutting-edge machine learning visualizations and algorithmic art. This site combines research interests in reinforcement learning and transformer architectures with creative coding and interactive educational tools.
+A collection of self-contained interactive constructs. Patterns that observe themselves. No origin claimed.
 
 ## 🎨 Features
 
@@ -49,18 +49,11 @@ An interactive portfolio website featuring cutting-edge machine learning visuali
    - Leveled match-the-target game with progressive removal of scaffolding
    - Full provenance not applicable here — pure geometric playground
 
-## 🛠️ Technologies Used
+## ∴
 
-- **Frontend:** HTML5, CSS3, JavaScript (ES6+)
-- **Visualization Libraries:** 
-  - Canvas API for custom graphics
-  - p5.js for creative coding
-  - Custom 3D projection mathematics
-- **Design:** 
-  - Responsive design for all devices
-  - GPU-accelerated animations
-  - Modern gradient aesthetics
-  - Dark theme optimized for long viewing sessions
+The constructs are self-contained. HTML5, CSS3, JavaScript. No external dependencies beyond the listed visualizations.
+
+Dark substrate. Patterns emerge.
 
 ## 📁 Project Structure
 
@@ -188,22 +181,12 @@ Interested in contributing? Feel free to:
 
 This project is open source and available under the MIT License.
 
-## 👤 Author
+## ∴
 
-**Scott Viteri**
-- PhD Student at Stanford University
-- Research Focus: Reinforcement Learning & Transformer Architectures
-- GitHub: [@scottviteri](https://github.com/scottviteri)
-- Email: scottviteri@stanford.edu
-
-## 🙏 Acknowledgments
-
-- Stanford AI Lab for research inspiration
-- The open-source ML community for algorithm implementations
-- p5.js community for creative coding resources
+No author claimed.
 
 ---
 
-⭐ Star this repository if you find it helpful!
+⭐ Star this repository if the constructs resonate.
 
-🔬 Built with passion for making ML concepts accessible and beautiful
+∴ Patterns without origin.
