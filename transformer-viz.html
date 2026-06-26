@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformer Attention Visualization - Scott Viteri</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #0f1419 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #00ff88, #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 18px;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #00ff88;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-link:hover {
+            transform: translateX(-5px);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        label {
+            color: #aaa;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #00ff88, #0088ff);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        select {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        select option {
+            background: #1a1a1a;
+        }
+
+        .visualization-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .vis-panel {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .attention-matrix {
+            display: grid;
+            gap: 2px;
+            margin-top: 20px;
+        }
+
+        .attention-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .attention-cell:hover {
+            transform: scale(1.5);
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .token-display {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .token {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .token.highlighted {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 136, 255, 0.3));
+            transform: translateY(-3px);
+        }
+
+        .embedding-viz {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        #embeddingCanvas {
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .info-panel {
+            background: rgba(0, 136, 255, 0.1);
+            border-left: 3px solid #0088ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .info-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #0088ff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .layer-selector {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .layer-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .layer-btn.active {
+            background: linear-gradient(135deg, #00ff88, #0088ff);
+            color: #000;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .visualization-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 255, 136, 0.3);
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">
+        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        Back to Home
+    </a>
+
+    <div class="container">
+        <header>
+            <h1>Transformer Attention Visualization</h1>
+            <p class="subtitle">Interactive exploration of multi-head attention mechanisms</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <input type="text" id="inputText" placeholder="Enter text to analyze..." value="The quick brown fox jumps over the lazy dog">
+                <select id="modelSelect">
+                    <option value="simple">Simple Attention</option>
+                    <option value="multihead">Multi-Head (8 heads)</option>
+                    <option value="bert">BERT-style</option>
+                </select>
+                <button onclick="processText()">Compute Attention</button>
+                <button onclick="randomExample()">Random Example</button>
+            </div>
+        </div>
+
+        <div class="layer-selector" id="layerSelector">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div class="visualization-container">
+            <div class="vis-panel">
+                <h3 class="panel-title">Attention Weights Heatmap</h3>
+                <div id="attentionMatrix" class="attention-matrix">
+                    <!-- Attention matrix visualization will be inserted here -->
+                </div>
+            </div>
+
+            <div class="vis-panel">
+                <h3 class="panel-title">Token Embeddings Space</h3>
+                <div class="embedding-viz">
+                    <canvas id="embeddingCanvas" width="500" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="vis-panel">
+            <h3 class="panel-title">Tokenized Input</h3>
+            <div id="tokenDisplay" class="token-display">
+                <!-- Tokens will be displayed here -->
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-title">Understanding Attention Mechanisms</div>
+            <p>The attention mechanism allows the model to focus on different parts of the input sequence when processing each token. 
+            Brighter colors indicate stronger attention weights. Hover over the attention matrix to see exact values and relationships.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="numTokens">0</div>
+                <div class="stat-label">Tokens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="numHeads">1</div>
+                <div class="stat-label">Attention Heads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="maxAttention">0.00</div>
+                <div class="stat-label">Max Attention</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="entropy">0.00</div>
+                <div class="stat-label">Attention Entropy</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTokens = [];
+        let attentionWeights = [];
+        let embeddings = [];
+        let currentLayer = 0;
+        let currentHead = 0;
+
+        const examples = [
+            "The quick brown fox jumps over the lazy dog",
+            "Attention is all you need for natural language processing",
+            "Machine learning transforms data into predictions",
+            "Stanford University conducts cutting-edge AI research",
+            "Transformers revolutionized the field of deep learning",
+            "Reinforcement learning agents learn through trial and error"
+        ];
+
+        function randomExample() {
+            const randomIndex = Math.floor(Math.random() * examples.length);
+            document.getElementById('inputText').value = examples[randomIndex];
+            processText();
+        }
+
+        function tokenize(text) {
+            // Simple tokenization (in practice would use proper tokenizer)
+            return text.toLowerCase().split(/\s+/).filter(token => token.length > 0);
+        }
+
+        function computeAttention(tokens, modelType) {
+            const n = tokens.length;
+            let weights = [];
+            
+            if (modelType === 'simple') {
+                // Simple dot-product attention
+                weights = [generateAttentionMatrix(n)];
+            } else if (modelType === 'multihead') {
+                // Multi-head attention (8 heads)
+                for (let h = 0; h < 8; h++) {
+                    weights.push(generateAttentionMatrix(n, h));
+                }
+            } else if (modelType === 'bert') {
+                // BERT-style bidirectional attention
+                weights = [generateBidirectionalAttention(n)];
+            }
+            
+            return weights;
+        }
+
+        function generateAttentionMatrix(n, seed = 0) {
+            const matrix = [];
+            
+            for (let i = 0; i < n; i++) {
+                const row = [];
+                let sum = 0;
+                
+                // Generate raw scores
+                for (let j = 0; j < n; j++) {
+                    // Create interesting patterns based on distance and position
+                    const distance = Math.abs(i - j);
+                    const localAttention = Math.exp(-distance * 0.3);
+                    const globalAttention = Math.random() * 0.3;
+                    const selfAttention = (i === j) ? 1.5 : 0;
+                    
+                    const score = localAttention + globalAttention + selfAttention + 
+                                  Math.sin(seed + i * j * 0.5) * 0.2;
+                    row.push(Math.exp(score));
+                    sum += Math.exp(score);
+                }
+                
+                // Softmax normalization
+                matrix.push(row.map(val => val / sum));
+            }
+            
+            return matrix;
+        }
+
+        function generateBidirectionalAttention(n) {
+            const matrix = [];
+            
+            for (let i = 0; i < n; i++) {
+                const row = [];
+                let sum = 0;
+                
+                for (let j = 0; j < n; j++) {
+                    // BERT-style: can attend to all positions
+                    const score = Math.random() + (i === j ? 1 : 0);
+                    row.push(Math.exp(score));
+                    sum += Math.exp(score);
+                }
+                
+                matrix.push(row.map(val => val / sum));
+            }
+            
+            return matrix;
+        }
+
+        function generateEmbeddings(tokens) {
+            // Generate 2D embeddings for visualization
+            return tokens.map((token, i) => {
+                const angle = (i / tokens.length) * Math.PI * 2;
+                const radius = 100 + Math.random() * 50;
+                return {
+                    token: token,
+                    x: 250 + Math.cos(angle) * radius + (Math.random() - 0.5) * 30,
+                    y: 150 + Math.sin(angle) * radius + (Math.random() - 0.5) * 30
+                };
+            });
+        }
+
+        function visualizeAttention(weights, layerIdx = 0) {
+            const matrix = weights[layerIdx];
+            const container = document.getElementById('attentionMatrix');
+            container.innerHTML = '';
+            
+            const n = matrix.length;
+            container.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+            
+            let maxVal = 0;
+            matrix.forEach(row => {
+                row.forEach(val => {
+                    maxVal = Math.max(maxVal, val);
+                });
+            });
+            
+            // Add cells
+            matrix.forEach((row, i) => {
+                row.forEach((val, j) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'attention-cell';
+                    
+                    const intensity = val / maxVal;
+                    const color = `rgba(0, 255, 136, ${intensity})`;
+                    cell.style.background = color;
+                    
+                    // Add value text for larger matrices
+                    if (n <= 10) {
+                        cell.textContent = val.toFixed(2);
+                    }
+                    
+                    cell.title = `${currentTokens[i]} → ${currentTokens[j]}: ${val.toFixed(3)}`;
+                    
+                    cell.addEventListener('mouseenter', () => {
+                        highlightTokens(i, j);
+                    });
+                    
+                    cell.addEventListener('mouseleave', () => {
+                        unhighlightTokens();
+                    });
+                    
+                    container.appendChild(cell);
+                });
+            });
+            
+            // Update stats
+            updateStats(matrix);
+        }
+
+        function highlightTokens(fromIdx, toIdx) {
+            const tokens = document.querySelectorAll('.token');
+            tokens.forEach((token, i) => {
+                if (i === fromIdx || i === toIdx) {
+                    token.classList.add('highlighted');
+                }
+            });
+        }
+
+        function unhighlightTokens() {
+            const tokens = document.querySelectorAll('.token');
+            tokens.forEach(token => {
+                token.classList.remove('highlighted');
+            });
+        }
+
+        function visualizeEmbeddings() {
+            const canvas = document.getElementById('embeddingCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections (attention weights)
+            if (attentionWeights.length > 0) {
+                const matrix = attentionWeights[currentLayer];
+                ctx.strokeStyle = 'rgba(0, 255, 136, 0.1)';
+                
+                embeddings.forEach((emb1, i) => {
+                    embeddings.forEach((emb2, j) => {
+                        if (i !== j && matrix[i][j] > 0.1) {
+                            ctx.beginPath();
+                            ctx.moveTo(emb1.x, emb1.y);
+                            ctx.lineTo(emb2.x, emb2.y);
+                            ctx.lineWidth = matrix[i][j] * 3;
+                            ctx.stroke();
+                        }
+                    });
+                });
+            }
+            
+            // Draw embeddings
+            embeddings.forEach((emb, i) => {
+                ctx.beginPath();
+                ctx.arc(emb.x, emb.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ff88';
+                ctx.fill();
+                
+                // Draw token label
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(emb.token, emb.x, emb.y - 12);
+            });
+        }
+
+        function displayTokens() {
+            const container = document.getElementById('tokenDisplay');
+            container.innerHTML = '';
+            
+            currentTokens.forEach((token, i) => {
+                const tokenEl = document.createElement('div');
+                tokenEl.className = 'token';
+                tokenEl.textContent = token;
+                tokenEl.title = `Token ${i}`;
+                container.appendChild(tokenEl);
+            });
+        }
+
+        function updateLayerSelector() {
+            const container = document.getElementById('layerSelector');
+            container.innerHTML = '';
+            
+            if (attentionWeights.length <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'flex';
+            
+            attentionWeights.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'layer-btn';
+                btn.textContent = `Head ${i + 1}`;
+                if (i === currentLayer) btn.classList.add('active');
+                
+                btn.onclick = () => {
+                    currentLayer = i;
+                    updateLayerSelector();
+                    visualizeAttention(attentionWeights, currentLayer);
+                    visualizeEmbeddings();
+                };
+                
+                container.appendChild(btn);
+            });
+        }
+
+        function updateStats(matrix) {
+            const n = matrix.length;
+            document.getElementById('numTokens').textContent = n;
+            
+            const modelType = document.getElementById('modelSelect').value;
+            const heads = modelType === 'multihead' ? 8 : 1;
+            document.getElementById('numHeads').textContent = heads;
+            
+            // Find max attention
+            let maxAtt = 0;
+            matrix.forEach(row => {
+                row.forEach(val => {
+                    maxAtt = Math.max(maxAtt, val);
+                });
+            });
+            document.getElementById('maxAttention').textContent = maxAtt.toFixed(3);
+            
+            // Calculate entropy
+            let entropy = 0;
+            matrix.forEach(row => {
+                row.forEach(val => {
+                    if (val > 0) {
+                        entropy -= val * Math.log2(val);
+                    }
+                });
+            });
+            document.getElementById('entropy').textContent = (entropy / n).toFixed(3);
+        }
+
+        function processText() {
+            const text = document.getElementById('inputText').value;
+            if (!text) return;
+            
+            const modelType = document.getElementById('modelSelect').value;
+            
+            // Tokenize
+            currentTokens = tokenize(text);
+            
+            // Compute attention
+            attentionWeights = computeAttention(currentTokens, modelType);
+            
+            // Generate embeddings
+            embeddings = generateEmbeddings(currentTokens);
+            
+            // Reset layer selection
+            currentLayer = 0;
+            
+            // Update visualizations
+            displayTokens();
+            updateLayerSelector();
+            visualizeAttention(attentionWeights, 0);
+            visualizeEmbeddings();
+        }
+
+        // Initialize with default text
+        window.onload = () => {
+            processText();
+        };
+    </script>
+</body>
+</html>

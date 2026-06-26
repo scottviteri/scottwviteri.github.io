@@ -3,10 +3,644 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scott Viteri</title>
+    <title>Scott Viteri - ML Research & Visualizations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Neural Network Background Animation */
+        #neural-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 10px 50px;
+            background: rgba(10, 10, 10, 0.95);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ff88, #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00ff88, #0088ff);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0 50px;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 8vw, 80px);
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff, #00ff88, #0088ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(18px, 3vw, 24px);
+            color: #888;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #0088ff);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 2px solid #333;
+        }
+
+        .btn-secondary:hover {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        /* Sections */
+        section {
+            padding: 100px 50px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 48px);
+            margin-bottom: 50px;
+            text-align: center;
+            background: linear-gradient(135deg, #ffffff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Demo Cards */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .demo-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: #fff;
+            display: block;
+        }
+
+        .demo-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ff88;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .demo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00ff88, #0088ff);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .demo-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .demo-description {
+            color: #888;
+            line-height: 1.6;
+        }
+
+        /* Research Section */
+        .research-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            margin-bottom: 50px;
+            align-items: center;
+        }
+
+        .timeline-date {
+            min-width: 150px;
+            text-align: right;
+            padding-right: 30px;
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+        }
+
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #00ff88;
+            border-radius: 50%;
+            border: 4px solid #0a0a0a;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 15px 20px;
+            }
+
+            .nav-links {
+                gap: 15px;
+                font-size: 14px;
+            }
+
+            section {
+                padding: 60px 20px;
+            }
+
+            .timeline-date {
+                min-width: 100px;
+                font-size: 14px;
+            }
+        }
+
+        /* Loading Animation */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 255, 136, 0.1);
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello! I'm Scott Viteri</h1>
-    <p>PhD student at Stanford working on reinforcement learning and transformer architectures.</p>
+    <!-- Loading Screen -->
+    <div class="loader" id="loader">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Neural Network Background -->
+    <canvas id="neural-bg"></canvas>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div class="logo">SV</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#demos">Demos</a></li>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Scott Viteri</h1>
+            <p class="hero-subtitle">
+                PhD Student at Stanford University<br>
+                Exploring the frontiers of Reinforcement Learning & Transformer Architectures
+            </p>
+            <div class="hero-buttons">
+                <a href="#demos" class="btn btn-primary">Explore Visualizations</a>
+                <a href="#research" class="btn btn-secondary">View Research</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demos Section -->
+    <section id="demos">
+        <h2 class="section-title">Interactive ML Visualizations</h2>
+        <div class="demo-grid">
+            <a href="transformer-viz.html" class="demo-card">
+                <div class="demo-icon">🤖</div>
+                <h3 class="demo-title">Transformer Attention</h3>
+                <p class="demo-description">Interactive visualization of multi-head attention mechanisms in transformer architectures</p>
+            </a>
+            <a href="rl-playground.html" class="demo-card">
+                <div class="demo-icon">🎮</div>
+                <h3 class="demo-title">RL Playground</h3>
+                <p class="demo-description">Train agents in real-time using Q-learning, policy gradients, and more</p>
+            </a>
+            <a href="neural-network.html" class="demo-card">
+                <div class="demo-icon">🧠</div>
+                <h3 class="demo-title">Neural Network Builder</h3>
+                <p class="demo-description">Build and train neural networks with interactive backpropagation visualization</p>
+            </a>
+            <a href="optimization.html" class="demo-card">
+                <div class="demo-icon">📈</div>
+                <h3 class="demo-title">Optimization Landscapes</h3>
+                <p class="demo-description">Explore gradient descent, Adam, and other optimizers in 3D loss landscapes</p>
+            </a>
+            <a href="algorithmic-art.html" class="demo-card">
+                <div class="demo-icon">🎨</div>
+                <h3 class="demo-title">Algorithmic Art Lab</h3>
+                <p class="demo-description">Create stunning generative art with flow fields, fractals, and neural patterns</p>
+            </a>
+            <a href="4d-cube.html" class="demo-card">
+                <div class="demo-icon">🔷</div>
+                <h3 class="demo-title">4D Rotation Playground</h3>
+                <p class="demo-description">Interactive tesseract for building 4D rotation intuition — diagnostic tiles, depth coloring, K₄ controls, and a match game</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Research Section -->
+    <section id="research">
+        <h2 class="section-title">Research Journey</h2>
+        <div class="research-timeline">
+            <div class="timeline-item">
+                <div class="timeline-date">2024-Present</div>
+                <div class="timeline-content">
+                    <h3>Transformer Architectures for RL</h3>
+                    <p>Investigating how transformer models can enhance decision-making in reinforcement learning environments through improved credit assignment and long-term memory.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2023-2024</div>
+                <div class="timeline-content">
+                    <h3>Multi-Agent Reinforcement Learning</h3>
+                    <p>Developing algorithms for coordinated behavior in complex multi-agent systems with partial observability.</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2022-2023</div>
+                <div class="timeline-content">
+                    <h3>Efficient Exploration in RL</h3>
+                    <p>Research on curiosity-driven exploration methods and information-theoretic approaches to sample efficiency.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects">
+        <h2 class="section-title">Open Source Projects</h2>
+        <div class="demo-grid">
+            <a href="https://github.com/scottviteri" target="_blank" class="demo-card">
+                <div class="demo-icon">💻</div>
+                <h3 class="demo-title">RL Toolkit</h3>
+                <p class="demo-description">A comprehensive library for reinforcement learning research with modular components</p>
+            </a>
+            <a href="https://github.com/scottviteri" target="_blank" class="demo-card">
+                <div class="demo-icon">📚</div>
+                <h3 class="demo-title">Transformer Utils</h3>
+                <p class="demo-description">Utilities and visualizations for understanding and debugging transformer models</p>
+            </a>
+            <a href="https://github.com/scottviteri" target="_blank" class="demo-card">
+                <div class="demo-icon">🔬</div>
+                <h3 class="demo-title">Research Papers</h3>
+                <p class="demo-description">Implementation of recent papers in RL and transformers with reproducible experiments</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <p>© 2024 Scott Viteri | Stanford University</p>
+        <p style="margin-top: 10px;">
+            <a href="mailto:scottviteri@stanford.edu" style="color: #00ff88;">Email</a> | 
+            <a href="https://github.com/scottviteri" style="color: #00ff88;">GitHub</a> | 
+            <a href="https://scholar.google.com" style="color: #00ff88;">Google Scholar</a>
+        </p>
+    </footer>
+
+    <script>
+        // Neural Network Background Animation
+        const canvas = document.getElementById('neural-bg');
+        const ctx = canvas.getContext('2d');
+        
+        let nodes = [];
+        let connections = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initNetwork();
+        }
+        
+        class Node {
+            constructor(x, y, layer) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = 3;
+                this.layer = layer;
+                this.activation = 0;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                
+                // Mouse interaction
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 150) {
+                    this.activation = Math.min(1, this.activation + 0.1);
+                } else {
+                    this.activation = Math.max(0, this.activation - 0.05);
+                }
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius + this.activation * 2, 0, Math.PI * 2);
+                
+                const opacity = 0.3 + this.activation * 0.7;
+                const color = this.layer % 2 === 0 ? 
+                    `rgba(0, 255, 136, ${opacity})` : 
+                    `rgba(0, 136, 255, ${opacity})`;
+                
+                ctx.fillStyle = color;
+                ctx.fill();
+                
+                // Glow effect
+                if (this.activation > 0) {
+                    ctx.shadowBlur = 20 * this.activation;
+                    ctx.shadowColor = color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        
+        function initNetwork() {
+            nodes = [];
+            connections = [];
+            
+            const layers = 5;
+            const nodesPerLayer = 8;
+            const layerWidth = canvas.width / (layers + 1);
+            
+            for (let l = 0; l < layers; l++) {
+                for (let n = 0; n < nodesPerLayer; n++) {
+                    const x = layerWidth * (l + 1);
+                    const y = (canvas.height / (nodesPerLayer + 1)) * (n + 1);
+                    nodes.push(new Node(x + (Math.random() - 0.5) * 50, y + (Math.random() - 0.5) * 50, l));
+                }
+            }
+            
+            // Create connections
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    if (Math.abs(nodes[i].layer - nodes[j].layer) === 1) {
+                        if (Math.random() > 0.3) {
+                            connections.push([i, j]);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function animate() {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            connections.forEach(([i, j]) => {
+                const node1 = nodes[i];
+                const node2 = nodes[j];
+                
+                const activation = (node1.activation + node2.activation) / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(node1.x, node1.y);
+                ctx.lineTo(node2.x, node2.y);
+                ctx.strokeStyle = `rgba(0, 255, 136, ${0.1 + activation * 0.2})`;
+                ctx.lineWidth = 0.5 + activation;
+                ctx.stroke();
+            });
+            
+            // Update and draw nodes
+            nodes.forEach(node => {
+                node.update();
+                node.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Event Listeners
+        window.addEventListener('resize', resizeCanvas);
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        // Scroll effect for navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Initialize
+        resizeCanvas();
+        animate();
+        
+        // Hide loader when page is loaded
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+            }, 500);
+        });
+    </script>
 </body>
 </html>
